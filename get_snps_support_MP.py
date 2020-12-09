@@ -394,7 +394,7 @@ class LineWrapRawTextHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 
 parser = argparse.ArgumentParser(
-	description="Given a SNP matrix, reads .fastq files, and core_coords.txt, looks up the read support for each SNP in each assembly and reports that information, highlighting any troubling low confidence base-calls.\n\nUsage example: $ get_snps_support.py -config config.txt",
+	description="Given a SNP matrix, reads .fastq files, and core_coords.txt, looks up the read support for each SNP in each assembly and reports that information, highlighting any troubling low confidence base-calls.\n\nUsage example: $ get_snps_support.py -config config.txt -outdir ./ -threads 20 -chunksize 10",
 	formatter_class=LineWrapRawTextHelpFormatter)
 parser.add_argument(
 	"-config",  dest="config_file", required = True,
@@ -402,7 +402,7 @@ parser.add_argument(
 	)
 parser.add_argument(
 	"-outdir",  dest="outdir", required = True,
-	help="Specify output directory. "
+	help="Specify output directory."
 	)
 parser.add_argument(
 	"-threads",  dest="threads", type=int, nargs="?", default = 1,
