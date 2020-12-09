@@ -36,12 +36,13 @@ The consensus score is reported in an output file along with other information t
 
 ## Example workflow
 
+### Intro and setup
+
 In this example I will describe a simple use of Spine and Nucmer as well as the included scripts on dummy data. This assumes that you have assemblies and associated .sam files before  beginning. In all cases that commands are executed, the path will be indicated relative to the following dummy directory structure (for clarity directories are named in upper-case letters while files are lower-case):
 
 ```
 ~/
 |-- ASSEMBLIES/
-|   |
 |   |-- genome1.fna
 |   |-- genome2.fna
 |   `-- ...
@@ -55,3 +56,17 @@ In this example I will describe a simple use of Spine and Nucmer as well as the 
 `-- SNP_SUPPORT/
 ```
 
+### Spine
+
+Spine takes as input a text file with 3 columns: path/to/file	ID	fasta
+The config file to run spine can be created with the following command (assuming only assembly files are present in your ASSEMBLIES/ dir):
+
+```bash
+~/ASSEMBLIES$ ls | awk 'BEGIN { FS="\t"; OFS="\t" } { print "../ASSEMBLIES/"$1, $1, "fasta" }' > ../SPINE/config.txt
+```
+
+Spine can then be run with as many cores as you like using something like the following command:
+
+```bash
+~/SPINE$ spine.pl -f config.txt -t 40
+```
