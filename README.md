@@ -41,14 +41,14 @@ In this example I will describe a simple use of Spine and Nucmer as well as the 
 ```
 ~/
 |-- ASSEMBLIES/
-|	|
-|	|-- genome1.fna
-|	|-- genome2.fna
-|	`-- ...
+|   |
+|   |-- genome1.fna
+|   |-- genome2.fna
+|   `-- ...
 |-- SAMS/
-|	|-- genome1.sam
-|	|-- genome2.sam
-|	`-- ...
+|   |-- genome1.sam
+|   |-- genome2.sam
+|   `-- ...
 |-- SPINE/
 |-- NUCMER/
 |-- SNPS/
