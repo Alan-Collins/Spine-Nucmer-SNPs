@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-# Made config with  paste <(ls ../NUCMER/*.snps) <(ls ../SPINE/*.core_coords.txt) <(ls ../*scaffolds_filt.fasta) <(ls ../SAMS/*.sam) <(ls ../SAMS/) | awk '{gsub("../SAMS/","",$5)}1 {gsub("_aligned.sam","",$5)}1' | sed 's/ /\t/g' > config.txt
-
-
 import argparse
 import sys
 import re
@@ -15,7 +12,7 @@ import pickle
 import textwrap as _textwrap
 
 
-# Takes a config file with 3 columns: Path/to/*core_coords.txt	Path/to/*_scaffolds.fasta	Path/to/*.sam
+# Takes a config file with 5 columns: PATH/TO/snps_files	PATH/TO/coords_files	PATH/TO/assemblies	PATH/TO/sam_files	ID
 
 start_time = time.time()
 
