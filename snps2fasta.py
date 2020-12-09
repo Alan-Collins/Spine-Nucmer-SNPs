@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#v1.1 2020-10-22 attempt to fix snpmatrix output step as snps are out of order. Also added dict pickling
 
 import sys
 import os
@@ -8,6 +7,8 @@ import time
 import argparse
 import pickle
 import gzip
+import textwrap as _textwrap
+
 
 start = time.time()
 
@@ -196,8 +197,7 @@ def main():
 
 
 	parser = argparse.ArgumentParser(
-		description="After running spine on a set of genomes to find the core genome and then running nucmer show-snps to identify differences in core genome sequence between genomes, this script converts all the .snps files output by nucmer into a fasta formatted alignment of just the variable sites in each backbone sequences.\
-		\n\nExample usage : snps2fasta.py -r Spine/backbone.fasta -f Out/alignment.fasta -whole -m Out/snp_matrix.csv -d '\\t' -p '(.*)_core\.snps' Nucmer/*.snps",
+		description="After running spine on a set of genomes to find the core genome and then running nucmer show-snps to identify differences in core genome sequence between genomes, this script converts all the .snps files output by nucmer into a fasta formatted alignment of just the variable sites in each backbone sequences. Example usage : snps2fasta.py -r Spine/backbone.fasta -f Out/alignment.fasta -whole -m Out/snp_matrix.csv -d '\\t' -p '(.*)_core\.snps' Nucmer/*.snps",
 		formatter_class=LineWrapRawTextHelpFormatter)
 	parser.add_argument(
 		"-r",  dest="reference", required = True,
