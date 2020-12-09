@@ -3,7 +3,15 @@
 # Made config with  paste <(ls ../NUCMER/*.snps) <(ls ../SPINE/*.core_coords.txt) <(ls ../*scaffolds_filt.fasta) <(ls ../SAMS/*.sam) <(ls ../SAMS/) | awk '{gsub("../SAMS/","",$5)}1 {gsub("_aligned.sam","",$5)}1' | sed 's/ /\t/g' > config.txt
 
 
-import argparse, sys, re, time, multiprocessing, math, os, gzip, pickle
+import argparse
+import sys
+import re
+import time
+import multiprocessing
+import math
+import os
+import gzip
+import pickle
 import snpclasses
 
 # Takes a config file with 3 columns: Path/to/*core_coords.txt	Path/to/*_scaffolds.fasta	Path/to/*.sam
