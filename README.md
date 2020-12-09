@@ -40,18 +40,18 @@ In this example I will describe a simple use of Spine and Nucmer as well as the 
 
 ```
 ~/
-|__ ASSEMBLIES/
+|-- ASSEMBLIES/
 |	|
-|	|__ genome1.fna
-|	|__ genome2.fna
-|	\\__ ...
-|__ SAMS/
-|	|__ genome1.sam
-|	|__ genome2.sam
-|	\\__ ...
-|__ SPINE/
-|__ NUCMER/
-|__ SNPS/
-\\__ SNP_SUPPORT/
+|	|-- genome1.fna
+|	|-- genome2.fna
+|	`-- ...
+|-- SAMS/
+|	|-- genome1.sam
+|	|-- genome2.sam
+|	`-- ...
+|-- SPINE/
+|-- NUCMER/
+|-- SNPS/
+`-- SNP_SUPPORT/
 ```
 
