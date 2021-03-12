@@ -198,7 +198,7 @@ def calc_consensus_score(called_base, read_bases, read_qualities, contig, positi
 			disagree_score += quality
 
 	try:
-		consensus_score = (agree_score - disagree_score) / agree_score
+		consensus_score = agree_score / (agree_score + disagree_score)
 	except Exception as e:
 		print("Exception while calculating consensus score: %s" % e)
 		print(contig)
