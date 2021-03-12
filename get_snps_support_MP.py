@@ -398,7 +398,7 @@ parser = argparse.ArgumentParser(
 	formatter_class=LineWrapRawTextHelpFormatter)
 parser.add_argument(
 	"-config",  dest="config_file", required = True,
-	help="Specify config file. "
+	help="Specify config file. Config file needs 5 columns: PATH/TO/snps_files	PATH/TO/coords_files	PATH/TO/assemblies	PATH/TO/sam_files	ID_for_ouput_naming"
 	)
 parser.add_argument(
 	"-outdir",  dest="outdir", required = True,
