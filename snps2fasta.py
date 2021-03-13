@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#v1.1 2020-10-22 attempt to fix snpmatrix output step as snps are out of order. Also added dict pickling
 
 import sys
 import os
@@ -7,8 +8,6 @@ import time
 import argparse
 import pickle
 import gzip
-import textwrap as _textwrap
-
 
 start = time.time()
 
@@ -183,13 +182,7 @@ def fill_ref_dict_with_seq(ref_snps_obj, ref_seq_dict):
 					ref_snps_obj.snps[backbone][position+1] = base
 	return ref_snps_obj
 
-class LineWrapRawTextHelpFormatter(argparse.RawDescriptionHelpFormatter):
-	"""
-	Short function for argparse that wraps text properly when printing to terminal
-	"""
-	def _split_lines(self, text, width):
-		text = self._whitespace_matcher.sub(' ', text).strip()
-		return _textwrap.wrap(text, width)
+
 	
 
 def main():
@@ -197,8 +190,9 @@ def main():
 
 
 	parser = argparse.ArgumentParser(
-		description="After running spine on a set of genomes to find the core genome and then running nucmer show-snps to identify differences in core genome sequence between genomes, this script converts all the .snps files output by nucmer into a fasta formatted alignment of just the variable sites in each backbone sequences. Example usage : snps2fasta.py -r Spine/backbone.fasta -f Out/alignment.fasta -whole -m Out/snp_matrix.csv -d '\\t' -p '(.*)_core\.snps' Nucmer/*.snps",
-		formatter_class=LineWrapRawTextHelpFormatter)
+		description="After running spine on a set of genomes to find the core genome and then running nucmer show-snps to identify differences in core genome sequence between genomes, this script converts all the .snps files output by nucmer into a fasta formatted alignment of just the variable sites in each backbone sequences.\
+		\n\nExample usage : snps2fasta.py -r Spine/backbone.fasta -f Out/alignment.fasta -whole -m Out/snp_matrix.csv -d '\\t' -p '(.*)_core\.snps' Nucmer/*.snps",
+		formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument(
 		"-r",  dest="reference", required = True,
 		help="Specify reference backbone fasta file. "
@@ -238,6 +232,7 @@ def main():
 	inref.close()
 
 	query_snps_list = []
+	snp_mat = False
 
 	ref_snps_obj = snps_object("Reference")
 	for file in args.snps_files:
@@ -285,14 +280,13 @@ def main():
 
 		
 
-	else:
-		print("Building SNP matrix...")
-		snp_mat = make_snp_matrix(query_snps_list)
 
-	
-
+		
 	if not args.whole:
-
+		if not snp_mat:
+			print("Building SNP matrix...")
+			snp_mat = make_snp_matrix(query_snps_list)
+	
 		print("Writing fasta file...")
 		fasta_list = []
 		with open(args.out_fasta, 'w+') as outf:
@@ -311,16 +305,20 @@ def main():
 			print("Processing .snps file %i of %i" %(i+1, len(query_snps_list)))
 			query_snps_list[i].snps = fill_query_dict(ref_snps_obj.snps, query_snps_list[i].snps)
 			query_snps_list[i].snps = {key:{k:v for k,v in sorted(query_snps_list[i].snps[key].items())} for key in sorted(query_snps_list[i].snps)}
+		
+		del ref_snps_obj
 
 		# print(query_snps_list[1].snps)
 		print("Building SNP and backbone sequence matrix...")
-		snp_mat2 = make_snp_matrix(query_snps_list)
+		snp_mat = make_snp_matrix(query_snps_list)
+
+		del query_snps_list
 
 		print("Writing fasta file...")
 
 		with open(args.out_fasta, 'w+') as outf:
 			fasta_list = []
-			for k,v in snp_mat2.items():
+			for k,v in snp_mat.items():
 				if k != "Genome_ID":
 					fasta_list.append(">" + k + '\n' + "".join(v.values()))
 			outf.write('\n'.join(fasta_list))
