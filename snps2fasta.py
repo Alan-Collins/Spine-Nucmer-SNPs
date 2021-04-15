@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#v1.1 2020-10-22 attempt to fix snpmatrix output step as snps are out of order. Also added dict pickling
 
 import sys
 import os
@@ -15,12 +14,12 @@ class snps_object():
 	"""Stores header and seq of fasta as well as positional information about indels"""
 	def __init__(self,genomeid):
 		self.genomeid = genomeid
-		self.snps = {} # dict for snps { scaffold : { position : snp } }
-		self.indels = {} # dict for indels { scaffold : [ ( indel1_start , indel1_end ) ] }
+		self.snps = {} 	# dict for snps { scaffold : { position : snp } } 
+						# or if there is an indel { scaffold : { position : {position_in_indel : snp } } }
+
 
 def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 
-	is_indel = False
 	indel_counter = 1
 	indel_pos = 0	
 	query_snps_obj = snps_object(genomeid)
@@ -34,17 +33,17 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 			quernuc = line.split()[2]
 
 
-			if backbone not in ref_snps_obj.snps.keys():
+			if backbone not in ref_snps_obj.snps:
 				indel_counter = 1
 				ref_snps_obj.snps[backbone] = {}
 
-			if backbone not in query_snps_obj.snps.keys():
+			if backbone not in query_snps_obj.snps:
 				indel_counter = 1
 				query_snps_obj.snps[backbone] = {}
 
 			if refnuc != ".":
 				indel_counter = 1 # If the indel is finished, reset the indel_counter that measures indel size
-				if pos not in ref_snps_obj.snps[backbone].keys():
+				if pos not in ref_snps_obj.snps[backbone]:
 					ref_snps_obj.snps[backbone][pos] = refnuc
 				query_snps_obj.snps[backbone][pos] = quernuc
 
@@ -57,26 +56,21 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 					indel_pos = int(pos)
 					indel_counter = 1
 
-				if pos in ref_snps_obj.snps[backbone].keys():
+				if pos in ref_snps_obj.snps[backbone]:
 
 					if isinstance(ref_snps_obj.snps[backbone][pos],dict):
-						if not indel_counter in ref_snps_obj.snps[backbone][pos].keys():
+						if not indel_counter in ref_snps_obj.snps[backbone][pos]:
 							ref_snps_obj.snps[backbone][pos][indel_counter] = "-"
 
 
 					else:
-
 						current_nuc = ref_snps_obj.snps[backbone][pos]
-						ref_snps_obj.snps[backbone][pos] = { 0 : current_nuc } # When indels are found they are numbered from 1 at their position in the ref sequence, while the base at that position in the ref is stored at key 0.
-						ref_snps_obj.snps[backbone][pos][indel_counter] = "-" 
+						ref_snps_obj.snps[backbone][pos] = { 0 : current_nuc, indel_counter : "-" } # When indels are found they are numbered from 1 at their position in the ref sequence
 
 				else:
+					ref_snps_obj.snps[backbone][pos] = { indel_counter : "-" }
 
-					current_nuc = ref_fasta[backbone][pos-1]
-					ref_snps_obj.snps[backbone][pos] = { 0 : current_nuc }
-					ref_snps_obj.snps[backbone][pos][indel_counter] = "-"
-
-				if pos in query_snps_obj.snps[backbone].keys():
+				if pos in query_snps_obj.snps[backbone]:
 					
 					if isinstance(query_snps_obj.snps[backbone][pos],dict):
 						query_snps_obj.snps[backbone][pos][indel_counter] = quernuc
@@ -87,14 +81,12 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 						query_snps_obj.snps[backbone][pos][indel_counter] = quernuc
 
 				else:
-					current_nuc = ref_fasta[backbone][pos-1]
-					query_snps_obj.snps[backbone][pos] = { 0 : current_nuc } # When indels are found they are numbered from 1 at their position in the ref sequence, while the base at that position in the ref is stored at key 0.
-					query_snps_obj.snps[backbone][pos][indel_counter] = quernuc
+					query_snps_obj.snps[backbone][pos] = { indel_counter : quernuc }
 					
 
 			if quernuc == ".":
 				indel_counter = 1
-				if pos not in ref_snps_obj.snps[backbone].keys():
+				if pos not in ref_snps_obj.snps[backbone]:
 					ref_snps_obj.snps[backbone][pos] = refnuc
 				query_snps_obj.snps[backbone][pos] = "-"
 
@@ -127,22 +119,27 @@ def fill_query_dict(ref_dict, query_dict):
 	# Expects dicts of format { contig/scaffold : { position : nucleotide , position_with_indel : { 0 : nucleotide , 1 : "-" } } }
 
 	for backbone, backbone_dict in ref_dict.items():
-		if backbone not in query_dict.keys():
+		if backbone not in query_dict:
 			query_dict[backbone] = backbone_dict
 		else:
 			for position, nucleotide in ref_dict[backbone].items():
-				if position not in query_dict[backbone].keys():
+				if position not in query_dict[backbone]:
 					query_dict[backbone][position] = nucleotide
 				elif isinstance(query_dict[backbone][position], dict):
 					if isinstance(ref_dict[backbone][position], dict):
+						if set(query_dict[backbone][position].keys()) != set(ref_dict[backbone][position].keys()):
+							if 0 in ref_dict[backbone][position]:
+								if not 0 in query_dict[backbone][position]:
+									query_dict[backbone][position][0] = "-"
 						if len(query_dict[backbone][position]) != len(ref_dict[backbone][position]):
 							for i in range(len(query_dict[backbone][position]) + 1,  len(ref_dict[backbone][position]) +1 ):
 								query_dict[backbone][position][i] = "-"
 				elif not isinstance(query_dict[backbone][position], dict):
 					if isinstance(ref_dict[backbone][position], dict):
 						current_nuc = query_dict[backbone][position]
-						query_dict[backbone][position] = ref_dict[backbone][position]
-						query_dict[backbone][position][0] = current_nuc
+						query_dict[backbone][position] = { 0 : current_nuc }
+						for i in range(1,len(ref_dict[backbone][position])):
+							query_dict[backbone][position][i] = "-"
 
 
 	return query_dict
@@ -174,11 +171,11 @@ def make_snp_matrix(snps_obj_list):
 
 def fill_ref_dict_with_seq(ref_snps_obj, ref_seq_dict):
 	for backbone in ref_seq_dict.keys():
-		if backbone not in ref_snps_obj.snps.keys():
+		if backbone not in ref_snps_obj.snps:
 			ref_snps_obj.snps[backbone] = {(i+1):s for i, s in enumerate(ref_seq_dict[backbone])}
 		else:
 			for position, base in enumerate(ref_seq_dict[backbone]):
-				if (position + 1) not in ref_snps_obj.snps[backbone].keys():
+				if (position + 1) not in ref_snps_obj.snps[backbone]:
 					ref_snps_obj.snps[backbone][position+1] = base
 	return ref_snps_obj
 
@@ -186,7 +183,6 @@ def fill_ref_dict_with_seq(ref_snps_obj, ref_seq_dict):
 	
 
 def main():
-
 
 
 	parser = argparse.ArgumentParser(
@@ -256,14 +252,6 @@ def main():
 
 		print("Writing SNP matrix file...")
 
-		# with open(args.out_matrix, 'w+') as outmat:
-		# 	for k,v in sorted(snp_mat.items()):
-		# 		if k == "Genome_ID":
-		# 			outmat.write(k + args.matrix_delim + args.matrix_delim.join(v))
-		# 		else:
-		# 			outmat.write('\n' + k + args.matrix_delim + args.matrix_delim.join(v))
-		# outmat.close()
-
 		with gzip.open("snp_mat_dict.pkl.gzip", 'wb') as pklout:
 			pickle.dump(snp_mat, pklout, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -278,10 +266,6 @@ def main():
 			outmat.write('\n'.join(write_string))
 		outmat.close()
 
-		
-
-
-		
 	if not args.whole:
 		if not snp_mat:
 			print("Building SNP matrix...")
@@ -299,8 +283,7 @@ def main():
 	else:
 		print("Adding reference sequence at invariant sites to each entry...")
 		ref_snps_obj = fill_ref_dict_with_seq(ref_snps_obj, ref_fasta)
-		# test_dict = {key:{k:v for k,v in sorted(ref_snps_obj.snps[key].items())} for key in sorted(ref_snps_obj.snps)}
-		# print(test_dict)
+
 		for i in range(len(query_snps_list)):
 			print("Processing .snps file %i of %i" %(i+1, len(query_snps_list)))
 			query_snps_list[i].snps = fill_query_dict(ref_snps_obj.snps, query_snps_list[i].snps)
@@ -308,7 +291,6 @@ def main():
 		
 		del ref_snps_obj
 
-		# print(query_snps_list[1].snps)
 		print("Building SNP and backbone sequence matrix...")
 		snp_mat = make_snp_matrix(query_snps_list)
 
@@ -318,9 +300,10 @@ def main():
 
 		with open(args.out_fasta, 'w+') as outf:
 			fasta_list = []
+			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
 			for k,v in snp_mat.items():
 				if k != "Genome_ID":
-					fasta_list.append(">" + k + '\n' + "".join(v.values()))
+					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
 			outf.write('\n'.join(fasta_list))
 		outf.close()
 
@@ -332,4 +315,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
