@@ -67,15 +67,16 @@ corresponding_cores_dict = defaultdict(list)
 
 for file in args.delta_files:
     with open(file, 'r') as fin:
-        lines = fin.readlines()
-        for i in range(2,len(lines),3):
-            bits = lines[i].split()
-            try:
-                backbone = bits[0][1:] # get rid of '>' symbol at index 0
-                core_segment = bits[1]
-                corresponding_cores_dict[backbone].append(core_segment)
-            except:
-                print(lines[i])
+        
+        for line in fin.readlines():
+            if line[0] == '>'
+                bits = line.split()
+                try:
+                    backbone = bits[0][1:] # get rid of '>' symbol at index 0
+                    core_segment = bits[1]
+                    corresponding_cores_dict[backbone].append(core_segment)
+                except:
+                    print(lines[i])
 # print(corresponding_cores_dict)
             
 
