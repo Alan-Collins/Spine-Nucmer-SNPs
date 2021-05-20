@@ -278,7 +278,7 @@ def main():
 			for k,v in snp_mat.items():
 				if k != "Genome_ID":
 					fasta_list.append(">" + k + '\n' + "".join(list(v.values())))
-			outf.write('\n'.join(fasta_list))
+			outf.write('\n'.join(fasta_list) + '\n')
 		outf.close()
 
 	else:
@@ -305,7 +305,7 @@ def main():
 			for k,v in snp_mat.items():
 				if k != "Genome_ID":
 					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-			outf.write('\n'.join(fasta_list))
+			outf.write('\n'.join(fasta_list) + '\n')
 		outf.close()
 
 
