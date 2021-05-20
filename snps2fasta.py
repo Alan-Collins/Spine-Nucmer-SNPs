@@ -45,7 +45,12 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 				indel_counter = 1 # If the indel is finished, reset the indel_counter that measures indel size
 				if pos not in ref_snps_obj.snps[backbone]:
 					ref_snps_obj.snps[backbone][pos] = refnuc
+				else:
+					if isinstance(ref_snps_obj.snps[backbone][pos],dict):
+						if 0 not in ref_snps_obj.snps[backbone][pos].keys():
+							ref_snps_obj.snps[backbone][pos][0] = refnuc
 				query_snps_obj.snps[backbone][pos] = quernuc
+
 
 
 			if refnuc == ".":
@@ -157,13 +162,11 @@ def make_snp_matrix(snps_obj_list):
 				if not isinstance(variant,dict):
 					if entry.genomeid == snps_obj_list[0].genomeid:
 						snp_matrix["Genome_ID"].append("%s_position_%i" %(backbone, pos))
-					#snp_matrix[entry.genomeid].append(variant)
 					snp_matrix[entry.genomeid]["%s_position_%i" %(backbone, pos)] = variant
 				else: 
 					for indel_pos, indel in sorted(variant.items()):
 						if entry.genomeid == snps_obj_list[0].genomeid:
 							snp_matrix["Genome_ID"].append("%s_position_%i_indel_%i" %(backbone, pos, indel_pos))
-						#snp_matrix[entry.genomeid].append(indel)
 						snp_matrix[entry.genomeid]["%s_position_%i_indel_%i" %(backbone, pos, indel_pos)] = indel
 
 	return snp_matrix
@@ -238,8 +241,6 @@ def main():
 		ref_snps_obj, query_snps_obj = parse_snps(ref_fasta, ref_snps_obj, file, genomeid)
 		query_snps_list.append(query_snps_obj)
 
-
-
 	for i in range(len(query_snps_list)):
 		print("Adding reference sequence at variant sites not found in .snps file to each entry...")
 		print("Processing .snps file %i of %i" %(i+1, len(query_snps_list)))
@@ -270,7 +271,7 @@ def main():
 		if not snp_mat:
 			print("Building SNP matrix...")
 			snp_mat = make_snp_matrix(query_snps_list)
-	
+
 		print("Writing fasta file...")
 		fasta_list = []
 		with open(args.out_fasta, 'w+') as outf:
