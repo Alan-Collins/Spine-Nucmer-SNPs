@@ -246,6 +246,15 @@ def main():
 		print("Processing .snps file %i of %i" %(i+1, len(query_snps_list)))
 		query_snps_list[i].snps = fill_query_dict(ref_snps_obj.snps, query_snps_list[i].snps)
 
+	snp_count = 0
+	for v in ref_snps_obj.snps.values():
+		for subv in v.values():
+			if isinstance(subv, dict):
+				for subsubv in subv.values():
+					snp_count += 1
+			else:
+				snp_count += 1
+
 	if args.out_matrix:
 		print("Building SNP matrix...")
 
@@ -282,6 +291,7 @@ def main():
 		outf.close()
 
 	else:
+
 		print("Adding reference sequence at invariant sites to each entry...")
 		ref_snps_obj = fill_ref_dict_with_seq(ref_snps_obj, ref_fasta)
 
@@ -312,7 +322,7 @@ def main():
 
 	stop = time.time()
 
-	print("All done! Found a total of %i variant sites among %i genomes in %.3f seconds." %(len(snp_mat["Genome_ID"]), len(args.snps_files), stop-start))
+	print("All done! Found a total of %i variant sites among %i genomes in %.3f seconds." %(snp_count, len(args.snps_files), stop-start))
 
 if __name__ == "__main__":
 	main()
