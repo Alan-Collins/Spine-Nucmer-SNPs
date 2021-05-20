@@ -82,8 +82,7 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 					
 					else:
 						current_nuc = query_snps_obj.snps[backbone][pos]
-						query_snps_obj.snps[backbone][pos] = { 0 : current_nuc }
-						query_snps_obj.snps[backbone][pos][indel_counter] = quernuc
+						query_snps_obj.snps[backbone][pos] = { 0 : current_nuc, indel_counter : quernuc}
 
 				else:
 					query_snps_obj.snps[backbone][pos] = { indel_counter : quernuc }
@@ -135,10 +134,11 @@ def fill_query_dict(ref_dict, query_dict):
 						if set(query_dict[backbone][position].keys()) != set(ref_dict[backbone][position].keys()):
 							if 0 in ref_dict[backbone][position]:
 								if not 0 in query_dict[backbone][position]:
-									query_dict[backbone][position][0] = "-"
+									query_dict[backbone][position][0] = ref_dict[backbone][position][0]
 						if len(query_dict[backbone][position]) != len(ref_dict[backbone][position]):
-							for i in range(len(query_dict[backbone][position]) + 1,  len(ref_dict[backbone][position]) +1 ):
-								query_dict[backbone][position][i] = "-"
+							for i in set(query_dict[backbone][position]).union(set(ref_dict[backbone][position])):
+								if i not in query_dict[backbone][position].keys():
+									query_dict[backbone][position][i] = "-"
 				elif not isinstance(query_dict[backbone][position], dict):
 					if isinstance(ref_dict[backbone][position], dict):
 						current_nuc = query_dict[backbone][position]
@@ -283,10 +283,24 @@ def main():
 
 		print("Writing fasta file...")
 		fasta_list = []
+		ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1]
 		with open(args.out_fasta, 'w+') as outf:
 			for k,v in snp_mat.items():
 				if k != "Genome_ID":
-					fasta_list.append(">" + k + '\n' + "".join(list(v.values())))
+					try:
+						fasta_string = ">" + k + '\n'
+						for i in snp_mat[ref_genome].keys():
+							if 'indel_0' in i:
+								print(k, i, v[i])
+							fasta_string += v[i]
+
+						# fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
+					except Exception as e:
+						# print(e)
+						print(k, i)
+						location = '_'.join(i.split('_')[:-2])
+						print([x for x in v.items() if location in x[0]])
+						print([x for x in snp_mat[ref_genome].items() if location in x[0]])
 			outf.write('\n'.join(fasta_list) + '\n')
 		outf.close()
 
