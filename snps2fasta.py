@@ -272,7 +272,7 @@ def main():
 				if k == "Genome_ID":
 					pass
 				else:
-					write_string.append(k + args.matrix_delim + args.matrix_delim.join(list(snp_mat[k].values())))
+					write_string.append(k + args.matrix_delim + args.matrix_delim.join(list(snp_mat[k][i] for i in snp_mat["Genome_ID"])))
 			outmat.write('\n'.join(write_string))
 		outmat.close()
 
@@ -287,20 +287,7 @@ def main():
 		with open(args.out_fasta, 'w+') as outf:
 			for k,v in snp_mat.items():
 				if k != "Genome_ID":
-					try:
-						fasta_string = ">" + k + '\n'
-						for i in snp_mat[ref_genome].keys():
-							if 'indel_0' in i:
-								print(k, i, v[i])
-							fasta_string += v[i]
-
-						# fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-					except Exception as e:
-						# print(e)
-						print(k, i)
-						location = '_'.join(i.split('_')[:-2])
-						print([x for x in v.items() if location in x[0]])
-						print([x for x in snp_mat[ref_genome].items() if location in x[0]])
+					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
 			outf.write('\n'.join(fasta_list) + '\n')
 		outf.close()
 
