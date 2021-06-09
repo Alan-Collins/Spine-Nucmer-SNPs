@@ -209,7 +209,7 @@ def main():
 		help="Specify output matrix delimeter. Default comma delimeted"
 		)
 	parser.add_argument(
-		"-p", dest="filename_regex", nargs="?", 
+		"-p", dest="filename_regex", nargs="?", default = r'(.+)',
 		help="Specify regex pattern to capture genome ID from filename for use as fasta header and rowname in snp matrix. Default behavior is to use the whole filename."
 		)
 	parser.add_argument(
