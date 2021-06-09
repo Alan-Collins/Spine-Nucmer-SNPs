@@ -214,6 +214,31 @@ def make_snp_matrix(snps_obj_list):
 
 	return snp_matrix
 
+def make_snp_matrix_multifasta(snps_obj_list):
+	"""
+	Flattens all the dictionaries of snps in each snps_object class and adds them to a single subdict associated with their genome ID as a key in the main dict {genome_id : {contig : sequence}}
+	Args:
+		snps_obj_list (list): List of snps_object class instances for all the query files in your dataset
+	
+	Returns:
+		(dict) {genome_id : {contig : sequence}}
+	
+	"""
+
+	snp_matrix = {}
+	for entry in snps_obj_list:
+		snp_matrix[entry.genomeid] = {}
+		for backbone, pos_dict in sorted(entry.snps.items()):
+			if backbone not in snp_matrix[entry.genomeid].keys():
+				snp_matrix[entry.genomeid][backbone] = ""
+			for pos, variant in sorted(pos_dict.items()):
+				if not isinstance(variant,dict):
+					snp_matrix[entry.genomeid][backbone] += variant
+				else: 
+					for indel_pos, indel in sorted(variant.items()):
+						snp_matrix[entry.genomeid][backbone] += indel
+
+	return snp_matrix
 
 def fill_ref_dict_with_seq(ref_snps_obj, ref_seq_dict):
 	"""
