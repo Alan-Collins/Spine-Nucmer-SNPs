@@ -412,10 +412,10 @@ def main():
 
 	if args.multifasta:
 		multifasta_snpmat = make_snp_matrix_multifasta(query_snps_list)
-		multifastas_dict = defaultdict(dict) # {contig : {genome_id_contig : sequence}}
+		multifastas_dict = defaultdict(dict) # {contig : {genome_id : sequence}}
 		for entry, subdict in multifasta_snpmat.items():
 			for contig, sequence in subdict.items():
-				multifastas_dict[contig]["_".join([entry, contig])] = sequence
+				multifastas_dict[contig][entry] = sequence
 		for contig, contig_dict in multifastas_dict.items():
 			with open(outdir + contig + '.fna', 'w') as fout:
 				fout.write("".join([">{}\n{}\n".format(k,v) for k,v in contig_dict.items()]))
