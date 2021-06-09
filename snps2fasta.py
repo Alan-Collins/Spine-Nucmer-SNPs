@@ -11,15 +11,32 @@ import gzip
 start = time.time()
 
 class snps_object():
-	"""Stores header and seq of fasta as well as positional information about indels"""
+	"""
+	Stores header and seq of fasta as well as positional information about indels.
+
+	
+	Attributes:
+		genomeid (str): id of the genome with these snps.
+		snps (dict): dict for snps with the following structure { scaffold : { position : snp, { position : {position_in_indel : snp } } } }
+	"""
 	def __init__(self,genomeid):
 		self.genomeid = genomeid
-		self.snps = {} 	# dict for snps { scaffold : { position : snp } } 
-						# or if there is an indel { scaffold : { position : {position_in_indel : snp } } }
+		self.snps = {}
 
 
 def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
+	"""
+	Args:
+		ref_fasta (dict): dict with the reference genome {contig_name: sequence}.
+		ref_snps_obj (snps_object): snps_object class instance for the reference core genome.
+		file (str): Path to snps file to be parsed.
+		genomeid (str): ID to use to identify this snps file and its associated snps_object.
 
+	Returns:
+		(tuple) ref_snps_obj, query_snps_obj 
+		ref_snps_object with sites that were variant in this file added.
+		query_snps_obj representing the variant sites found in this file.
+	"""
 	indel_counter = 1
 	indel_pos = 0	
 	query_snps_obj = snps_object(genomeid)
@@ -101,6 +118,14 @@ def parse_snps(ref_fasta, ref_snps_obj, file, genomeid):
 
 
 def fasta_to_dict(FASTA_file):
+	"""
+	Args:
+		FASTA_file (str): Entire fasta file as a string.
+
+	
+	Returns:
+		(dict) dict with the fasta file organized as follows: {contig_name: sequence}.
+	"""
 	fasta_dict = {}
 	fastas = FASTA_file.split(">")
 	trimmed_fastas = []
@@ -119,8 +144,17 @@ def fasta_to_dict(FASTA_file):
 
 
 def fill_query_dict(ref_dict, query_dict):
-	# Given a dict with reference genome positions and nucleotides, fills in any missing positions in a query dict with the reference position
-	# Expects dicts of format { contig/scaffold : { position : nucleotide , position_with_indel : { 0 : nucleotide , 1 : "-" } } }
+	"""
+	Given a dict with reference genome positions and nucleotides, fills in any missing positions in a query dict with the reference position.
+	Expects dicts of format { contig/scaffold : { position : nucleotide , position_with_indel : { 0 : nucleotide , 1 : "-" } } }
+	Args:
+		ref_dict (dict): dictionary of all the positions of interest in the reference genome.
+		query_dict (dict): dictionary of all the positions of interest in the query genome.
+	
+	Returns:
+		(dict) Modified form of the query_dict with any positions found in the reference dict that weren't found in the query dict added in.
+
+	"""
 
 	for backbone, backbone_dict in ref_dict.items():
 		if backbone not in query_dict:
@@ -153,6 +187,15 @@ def fill_query_dict(ref_dict, query_dict):
 
 
 def make_snp_matrix(snps_obj_list):
+	"""
+	Flattens all the dictionaries of snps in each snps_object class and adds them to a single subdict associated with their genome ID as a key in the main dict {genome_id : {contig_position : nucleotide}}
+	Args:
+		snps_obj_list (list): List of snps_object class instances for all the query files in your dataset
+	
+	Returns:
+		(dict) {genome_id : {contig_position : nucleotide}}
+	
+	"""
 
 	snp_matrix = {"Genome_ID" : []}
 	for entry in snps_obj_list:
@@ -173,6 +216,15 @@ def make_snp_matrix(snps_obj_list):
 
 
 def fill_ref_dict_with_seq(ref_snps_obj, ref_seq_dict):
+	"""
+	If the user wants the whole core genome, this fills any missing positions with the provided reference genome sequence.
+	Args:
+		ref_snps_obj (snps_object class instance): snps_object representation of the reference genome.
+		ref_seq_dict (dict): dict representation of the refence genome fasta file
+	
+	Returns:
+		(snps_object class instance) snps_object representation of the reference genome with invariant sites added.
+	"""
 	for backbone in ref_seq_dict.keys():
 		if backbone not in ref_snps_obj.snps:
 			ref_snps_obj.snps[backbone] = {(i+1):s for i, s in enumerate(ref_seq_dict[backbone])}
