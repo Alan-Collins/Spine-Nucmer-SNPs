@@ -197,11 +197,11 @@ def main():
 		help="Specify reference backbone fasta file. "
 		)
 	parser.add_argument(
-		"-f", dest="out_fasta", required = True,
+		"-f", dest="out_fasta", required = False,
 		help="Specify output fasta filename."
 		)
 	parser.add_argument(
-		"-m", dest="out_matrix", nargs="?", 
+		"-m", dest="out_matrix", required = False, 
 		help="Specify output matrix filename."
 		)
 	parser.add_argument(
@@ -209,7 +209,7 @@ def main():
 		help="Specify output matrix delimeter. Default comma delimeted"
 		)
 	parser.add_argument(
-		"-p", dest="filename_regex", nargs="?",
+		"-p", dest="filename_regex", nargs="?", 
 		help="Specify regex pattern to capture genome ID from filename for use as fasta header and rowname in snp matrix. Default behavior is to use the whole filename."
 		)
 	parser.add_argument(
@@ -220,11 +220,26 @@ def main():
 		"snps_files", nargs="+",  
 		help="Specify input core.snps files produced by nucmer. "
 		)
+	parser.add_argument(
+		"-multifasta", dest="multifasta", action='store_true',  
+		help="Specify Whether you want the output fasta to be the each aligned core segment in a separate file. With this option you will need to provide an output directory into which one file per core segment will be produced. Each file will contain one fasta sequence per genome corresponding to an aligned core segment. Can be combined with the -whole option to control if you only want variant sites or the whole core genome."
+		)
+	parser.add_argument(
+		"-o", dest="out_dir", required = False,
+		help="If you chose the -multifasta option, this option can be used to define the path to the directory you want the multifastas written."
+		)
 	
 
 
 
 	args = parser.parse_args(sys.argv[1:])
+
+	if not any([args.out_fasta, args.out_matrix, all([args.out_dir, args.multifasta])]):
+		print("You did not provide enough output instructions. Use -m to output a snp matrix, -f to output an aligned multifasta of concatenated sequences, or both -o and -multifasta to output aligned multifastas of each individual core segment.")
+		sys.exit()
+	if any([args.out_dir, args.multifasta]) and not all([args.out_dir, args.multifasta]):
+		print("you must provide both -o and -multifasta to output aligned multifastas of each individual core segment.")
+		sys.exit() 
 
 	with open(args.reference, 'r') as inref:
 		ref_fasta = fasta_to_dict(inref.read())
@@ -237,7 +252,7 @@ def main():
 	for file in args.snps_files:
 		print("Reading in .snps files...")
 		print("Processing .snps file %i of %i" %(args.snps_files.index(file)+1, len(args.snps_files)))
-		genomeid = re.match( args.filename_regex ,file.split(os.path.sep)[-1])[1]
+		genomeid = re.match(args.filename_regex ,file.split(os.path.sep)[-1])[1]
 		ref_snps_obj, query_snps_obj = parse_snps(ref_fasta, ref_snps_obj, file, genomeid)
 		query_snps_list.append(query_snps_obj)
 
@@ -277,19 +292,22 @@ def main():
 		outmat.close()
 
 	if not args.whole:
-		if not snp_mat:
-			print("Building SNP matrix...")
-			snp_mat = make_snp_matrix(query_snps_list)
+		if args.out_fasta:
+			if not snp_mat:
+				print("Building SNP matrix...")
+				snp_mat = make_snp_matrix(query_snps_list)
 
-		print("Writing fasta file...")
-		fasta_list = []
-		ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1]
-		with open(args.out_fasta, 'w+') as outf:
-			for k,v in snp_mat.items():
-				if k != "Genome_ID":
-					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-			outf.write('\n'.join(fasta_list) + '\n')
-		outf.close()
+			print("Writing fasta file...")
+			fasta_list = []
+			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1]
+			with open(args.out_fasta, 'w+') as outf:
+				for k,v in snp_mat.items():
+					if k != "Genome_ID":
+						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
+				outf.write('\n'.join(fasta_list) + '\n')
+			outf.close()
+		if args.multifasta:
+			pass
 
 	else:
 
@@ -303,7 +321,7 @@ def main():
 		
 		del ref_snps_obj
 
-		print("Building SNP and backbone sequence matrix...")
+		print("Building SNP and backbone sequence matrix for whole core genome...")
 		snp_mat = make_snp_matrix(query_snps_list)
 
 		del query_snps_list
