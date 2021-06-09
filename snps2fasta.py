@@ -7,6 +7,7 @@ import time
 import argparse
 import pickle
 import gzip
+from collections import defaultdict
 
 start = time.time()
 
@@ -227,10 +228,8 @@ def make_snp_matrix_multifasta(snps_obj_list):
 
 	snp_matrix = {}
 	for entry in snps_obj_list:
-		snp_matrix[entry.genomeid] = {}
+		snp_matrix[entry.genomeid] = defaultdict(str)
 		for backbone, pos_dict in sorted(entry.snps.items()):
-			if backbone not in snp_matrix[entry.genomeid].keys():
-				snp_matrix[entry.genomeid][backbone] = ""
 			for pos, variant in sorted(pos_dict.items()):
 				if not isinstance(variant,dict):
 					snp_matrix[entry.genomeid][backbone] += variant
@@ -390,8 +389,7 @@ def main():
 						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
 				outf.write('\n'.join(fasta_list) + '\n')
 			outf.close()
-		if args.multifasta:
-			pass
+
 
 	else:
 
@@ -408,19 +406,30 @@ def main():
 		print("Building SNP and backbone sequence matrix for whole core genome...")
 		snp_mat = make_snp_matrix(query_snps_list)
 
-		del query_snps_list
+		if not args.multifasta:
+			del query_snps_list
 
-		print("Writing fasta file...")
+		if args.out_fasta:
+			print("Writing fasta file...")
 
-		with open(args.out_fasta, 'w+') as outf:
-			fasta_list = []
-			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
-			for k,v in snp_mat.items():
-				if k != "Genome_ID":
-					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-			outf.write('\n'.join(fasta_list) + '\n')
-		outf.close()
+			with open(args.out_fasta, 'w+') as outf:
+				fasta_list = []
+				ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
+				for k,v in snp_mat.items():
+					if k != "Genome_ID":
+						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
+				outf.write('\n'.join(fasta_list) + '\n')
+			outf.close()
 
+	if args.multifasta:
+		multifasta_snpmat = make_snp_matrix_multifasta(query_snps_list)
+		multifastas_dict = defaultdict(dict) # {contig : {genome_id_contig : sequence}}
+		for entry, subdict in multifasta_snpmat.items():
+			for contig, sequence in subdict.items():
+				multifastas_dict[contig]["_".join([entry, contig])] = sequence
+		for contig, contig_dict in multifastas_dict.items():
+			with open(outdir + contig + '.fna', 'w') as fout:
+				fout.write("".join([">{}\n{}\n".format(k,v) for k,v in contig_dict.items()]))
 
 
 	stop = time.time()
