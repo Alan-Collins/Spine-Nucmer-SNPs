@@ -239,7 +239,14 @@ def main():
 		sys.exit()
 	if any([args.out_dir, args.multifasta]) and not all([args.out_dir, args.multifasta]):
 		print("you must provide both -o and -multifasta to output aligned multifastas of each individual core segment.")
-		sys.exit() 
+		sys.exit()
+
+	if args.multifasta:
+		outdir = args.out_dir + '/' if args.out_dir[-1] != '/' else args.out_dir
+		if not os.path.isdir(outdir):
+			print("Provided output directory does not exist. It will be created.")
+			os.makedirs(outdir)
+
 
 	with open(args.reference, 'r') as inref:
 		ref_fasta = fasta_to_dict(inref.read())
@@ -277,8 +284,8 @@ def main():
 
 		print("Writing SNP matrix file...")
 
-		with gzip.open("snp_mat_dict.pkl.gzip", 'wb') as pklout:
-			pickle.dump(snp_mat, pklout, protocol=pickle.HIGHEST_PROTOCOL)
+		# with gzip.open("snp_mat_dict.pkl.gzip", 'wb') as pklout:
+		# 	pickle.dump(snp_mat, pklout, protocol=pickle.HIGHEST_PROTOCOL)
 
 		with open(args.out_matrix, 'w+') as outmat:
 			headers = list(snp_mat["Genome_ID"])
