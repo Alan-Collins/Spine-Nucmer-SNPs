@@ -380,17 +380,6 @@ def main():
 				print("Building SNP matrix...")
 				snp_mat = make_snp_matrix(query_snps_list)
 
-			print("Writing fasta file...")
-			fasta_list = []
-			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1]
-			with open(args.out_fasta, 'w+') as outf:
-				for k,v in snp_mat.items():
-					if k != "Genome_ID":
-						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-				outf.write('\n'.join(fasta_list) + '\n')
-			outf.close()
-
-
 	else:
 
 		print("Adding reference sequence at invariant sites to each entry...")
@@ -409,17 +398,17 @@ def main():
 		if not args.multifasta:
 			del query_snps_list
 
-		if args.out_fasta:
-			print("Writing fasta file...")
+	if args.out_fasta:
+		print("Writing fasta file...")
 
-			with open(args.out_fasta, 'w+') as outf:
-				fasta_list = []
-				ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
-				for k,v in snp_mat.items():
-					if k != "Genome_ID":
-						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-				outf.write('\n'.join(fasta_list) + '\n')
-			outf.close()
+		with open(args.out_fasta, 'w+') as outf:
+			fasta_list = []
+			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
+			for k,v in snp_mat.items():
+				if k != "Genome_ID":
+					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
+			outf.write('\n'.join(fasta_list) + '\n')
+		outf.close()
 
 	if args.multifasta:
 		multifasta_snpmat = make_snp_matrix_multifasta(query_snps_list)
