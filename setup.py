@@ -19,6 +19,6 @@ setup(
 
     ],
     packages = ["snpclasses"],
-    package_dir={"": "snpclasses"}
+    package_dir={"": "./"}
 )
 
