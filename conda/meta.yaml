@@ -1,0 +1,29 @@
+package:
+  name: spine-nucmer-snps
+  version: "0.1.0"
+
+source:
+  git_rev: "conda"
+  git_url: "https://github.com/Alan-Collins/Spine-Nucmer-SNPs.git"
+  git_depth: 1
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools
+
+  run:
+    - python
+    - matplotlib
+    - bioconda::mummer
+    - bioconda::spine
+
+
+about:
+  home: https://github.com/Alan-Collins/Spine-Nucmer-SNPs
+  license: GPL-3.0
+  license_family: GPL
+  license_file: LICENSE
+  license_url: https://www.gnu.org/licenses/gpl-3.0.en.html
+  summary: Scripts to process Spine and Nucmer outputs to analyse SNPs from core genome alignments.

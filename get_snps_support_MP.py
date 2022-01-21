@@ -10,7 +10,7 @@ import os
 import gzip
 import pickle
 import textwrap as _textwrap
-import snpclasses
+from snpclasses import snpclasses
 
 # Takes a config file with 5 columns: PATH/TO/snps_files	PATH/TO/coords_files	PATH/TO/assemblies	PATH/TO/sam_files	ID
 
