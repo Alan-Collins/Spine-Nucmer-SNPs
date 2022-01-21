@@ -3,7 +3,7 @@
  
 ## Installation
 
-the easiest way is using conda. This will install Spine and Nucmer into your conda environment and add all of the scripts in this repo to your PATH for easier use.
+The easiest way is using conda. This will install Spine and Nucmer into your conda environment and add all of the scripts in this repo to your PATH for easier use.
 
 ```bash
 # Create conda environment called "sns" for installation and install conda package
