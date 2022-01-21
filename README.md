@@ -1,5 +1,17 @@
 # Spine-Nucmer-SNPs
  A collection of scripts to process Spine and Nucmer outputs to analyse SNPs from core genome alignments.
+ 
+ ## Installation
+
+The easiest way is using conda. This will install Spine and Nucmer into your conda environment and add all of the scripts in this repo to your PATH for easier use.
+
+```bash
+# Create conda environment called "sns" for installation and install conda package
+conda create -n sns -c alan-collins spine-nucmer-snps
+
+# Activate conda environment
+conda activate sns
+```
 
 ## Workflow overview
 
