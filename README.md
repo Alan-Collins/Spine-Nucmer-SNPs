@@ -13,6 +13,19 @@ conda create -n sns -c alan-collins spine-nucmer-snps
 conda activate sns
 ```
 
+N.B. The above commands assume you have added bioconda and conda-forge to your list of channels in your conda config. If you have not done so, but would like to (allows easier installation of many common conda packages) you can do so with the following two commands:
+
+```bash
+conda config --append channels conda-forge
+conda config --append channels bioconda
+```
+
+If you would like to install spine-nucmer-scripts without addind those channels to your config, you can specify them just for this installation:
+
+```bash
+conda install -c alan-collins -c bioconda -c conda-forge spine-nucmer-snps
+```
+
 ## Workflow overview
 
 ### TL;DR
