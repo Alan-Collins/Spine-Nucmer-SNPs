@@ -215,7 +215,7 @@ def make_snp_matrix(snps_obj_list):
 
 	return snp_matrix
 
-def make_snp_matrix_multifasta(snps_obj_list):
+def make_snp_matrix_multifasta(snps_obj_list, mask_locs):
 	"""
 	Flattens all the dictionaries of snps in each snps_object class and adds them to a single subdict associated with their genome ID as a key in the main dict {genome_id : {contig : sequence}}
 	Args:
@@ -231,6 +231,10 @@ def make_snp_matrix_multifasta(snps_obj_list):
 		snp_matrix[entry.genomeid] = defaultdict(str)
 		for backbone, pos_dict in sorted(entry.snps.items()):
 			for pos, variant in sorted(pos_dict.items()):
+				if mask_locs:
+					if "{}_position_{}".format(backbone, pos) in mask_locs:
+						continue
+
 				if not isinstance(variant,dict):
 					snp_matrix[entry.genomeid][backbone] += variant
 				else: 
@@ -304,6 +308,10 @@ def main():
 		"-o", dest="out_dir", required = False,
 		help="If you chose the -multifasta option, this option can be used to define the path to the directory you want the multifastas written."
 		)
+	parser.add_argument(
+		"-mask", dest="mask", required = False,
+		help="File describing positions to exclude from output alignment. <core_contig_ID>\\t<position>"
+		)
 	
 
 
@@ -328,6 +336,14 @@ def main():
 		ref_fasta = fasta_to_dict(inref.read())
 	inref.close()
 
+	if args.mask:
+		with open(args.mask) as fin:
+			mask_locs = []
+			for line in fin:
+				contig_pos = "_position_".join(line.split())
+				mask_locs.append(contig_pos)
+		mask_locs = set(mask_locs)
+
 	query_snps_list = []
 	snp_mat = False
 
@@ -345,8 +361,12 @@ def main():
 		query_snps_list[i].snps = fill_query_dict(ref_snps_obj.snps, query_snps_list[i].snps)
 
 	snp_count = 0
-	for v in ref_snps_obj.snps.values():
-		for subv in v.values():
+	for k, v in ref_snps_obj.snps.items():
+		for subk, subv in v.items():
+			if args.mask:
+				if "{}_position_{}".format(k, subk) in mask_locs:
+					continue
+
 			if isinstance(subv, dict):
 				for subsubv in subv.values():
 					snp_count += 1
@@ -400,18 +420,30 @@ def main():
 
 	if args.out_fasta:
 		print("Writing fasta file...")
+		if args.mask:
+			with open(args.out_fasta, 'w+') as outf:
+				fasta_list = []
+				ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
+				for k,v in snp_mat.items():
+					if k != "Genome_ID":
+						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys() if "_".join(i.split("_")[:6]) not in mask_locs]))
+				outf.write('\n'.join(fasta_list) + '\n')
+			outf.close()
+		else:
+			with open(args.out_fasta, 'w+') as outf:
+				fasta_list = []
+				ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
+				for k,v in snp_mat.items():
+					if k != "Genome_ID":
+						fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
+				outf.write('\n'.join(fasta_list) + '\n')
+			outf.close()
 
-		with open(args.out_fasta, 'w+') as outf:
-			fasta_list = []
-			ref_genome = re.match(args.filename_regex ,args.snps_files[0].split(os.path.sep)[-1])[1] # The first genome in the dict will be the reference for the purpose of snp order
-			for k,v in snp_mat.items():
-				if k != "Genome_ID":
-					fasta_list.append(">" + k + '\n' + "".join([v[i] for i in snp_mat[ref_genome].keys()]))
-			outf.write('\n'.join(fasta_list) + '\n')
-		outf.close()
 
 	if args.multifasta:
-		multifasta_snpmat = make_snp_matrix_multifasta(query_snps_list)
+		if not args.mask:
+			mask_locs = False
+		multifasta_snpmat = make_snp_matrix_multifasta(query_snps_list, mask_locs)
 		multifastas_dict = defaultdict(dict) # {contig : {genome_id : sequence}}
 		for entry, subdict in multifasta_snpmat.items():
 			for contig, sequence in subdict.items():
