@@ -20,10 +20,27 @@ conda config --append channels conda-forge
 conda config --append channels bioconda
 ```
 
-If you would like to install spine-nucmer-scripts without addind those channels to your config, you can specify them just for this installation:
+If you would like to install spine-nucmer-scripts without adding those channels to your config, you can specify them just for this installation:
 
 ```bash
 conda install -c alan-collins -c bioconda -c conda-forge spine-nucmer-snps
+```
+
+In addition, Spine expects Nucmer executables to be in a certain location, but the spine conda installation doesn't handle that so we have to copy them. nucmer_backbone.pl and nucmer_multi.pl need to be copied to a folder called scripts/ in your environment's bin/ directory
+
+```bash
+# First find your conda environments bin directory (below is the path for my conda env to illustrate)
+# This must be done with your spine-nucmer-snps environment active
+which spine.pl
+
+# This returns the following path on my computer.
+# /home/alan/miniconda3/envs/sns/bin/spine.pl
+
+# next make a scripts directory
+mkdir /home/alan/miniconda3/envs/sns/bin/scripts
+
+# Finally, copy the nucmer executables to the new scripts folder
+cp /home/alan/miniconda3/envs/sns/bin/nucmer* /home/alan/miniconda3/envs/sns/bin/scripts
 ```
 
 ## Workflow overview
